@@ -1,0 +1,55 @@
+# Function to read CSV from hyperlink
+def read_csv_from_link(link):
+    # Assuming the link points to a CSV file
+    try:
+        csv_data = pd.read_csv(link)
+        return csv_data
+    except Exception as e:
+        print(f"Error reading CSV from {link}: {e}")
+        return None
+
+# Load the Excel file using openpyxl
+excel_file = 'your_excel_file.xlsx'
+wb = openpyxl.load_workbook(excel_file)
+ws = wb.active
+
+# Convert the worksheet to a pandas DataFrame for easier manipulation
+df = pd.DataFrame(ws.values)
+
+# Define which column contains the hyperlinks (assuming it's known)
+hyperlink_column = 'ColumnNameWithLinks'  # Replace with actual column name
+
+# Create an empty list to store the combined results
+combined_data = []
+
+# Iterate over the rows in the Excel file
+for index, row in df.iterrows():
+    new_rows = []
+    parent_row = row.copy()  # Copy the parent row
+
+    # Check if the cell in the hyperlink column contains a hyperlink
+    cell = ws.cell(row=index+2, column=df.columns.get_loc(hyperlink_column)+1)  # Adjust for index offset
+    if is_hyperlink(cell):
+        hyperlink = cell.hyperlink.target
+        print(f"Found hyperlink in row {index + 1}: {hyperlink}")
+
+        # Read the CSV data from the hyperlink
+        csv_data = read_csv_from_link(hyperlink)
+        if csv_data is not None:
+            # Repeat the parent row for each row in the CSV
+            for _, csv_row in csv_data.iterrows():
+                new_row = pd.concat([parent_row, csv_row], axis=0)
+                new_rows.append(new_row)
+
+    # If no hyperlink is found, just add the parent row
+    if not new_rows:
+        combined_data.append(parent_row)
+    else:
+        combined_data.extend(new_rows)
+
+# Create a new DataFrame with the combined data
+combined_df = pd.DataFrame(combined_data)
+
+# Save the combined DataFrame to a new Excel file
+combined_df.to_excel('combined_output.xlsx', index=False)
+print("Combined data saved to 'combined_output.xlsx'")
