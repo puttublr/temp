@@ -1,3 +1,12 @@
+import pandas as pd
+import openpyxl
+from urllib.parse import urlparse
+import os
+
+# Function to check if a cell contains a hyperlink
+def is_hyperlink(cell):
+    return cell.hyperlink is not None
+
 # Function to read CSV from hyperlink
 def read_csv_from_link(link):
     # Assuming the link points to a CSV file
