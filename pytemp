@@ -8,13 +8,20 @@ def is_hyperlink(cell):
     return cell.hyperlink is not None
 
 # Function to read CSV from hyperlink
-def read_csv_from_link(link):
-    # Assuming the link points to a CSV file
-    try:
-        csv_data = pd.read_csv(link)
+def read_csv_from_link(link, login_url, username, password):
+    session = Session()
+    
+    # Log in to the session
+    login_payload = {'username': username, 'password': password}
+    session.post(login_url, data=login_payload)
+    
+    # Access the CSV file
+    response = session.get(link)
+    if response.status_code == 200:
+        csv_data = pd.read_csv(pd.compat.StringIO(response.text))
         return csv_data
-    except Exception as e:
-        print(f"Error reading CSV from {link}: {e}")
+    else:
+        print(f"Failed to retrieve CSV from {link}. Status code: {response.status_code}")
         return None
 
 # Load the Excel file using openpyxl
